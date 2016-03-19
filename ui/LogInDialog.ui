@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/wl.png</normaloff>icons/wl.png</iconset>
+    <normaloff>../icons/wl.png</normaloff>../icons/wl.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -56,38 +56,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>NoButton</sender>
-   <signal>clicked()</signal>
-   <receiver>Dialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>143</x>
-     <y>46</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>143</x>
-     <y>34</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>YesButton</sender>
-   <signal>clicked()</signal>
-   <receiver>Dialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>52</x>
-     <y>46</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>143</x>
-     <y>34</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
