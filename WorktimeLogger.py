@@ -248,12 +248,9 @@ class WLMain(QtGui.QMainWindow):
 		# start time of current week
 		wstart_d = (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
 		wstart = time.mktime(wstart_d.timetuple())
-		print wstart
 		# end time of current week
 		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
-		print wend
 		wtime = self.log.getTimeBetween(wstart, wend)
-		print wtime
 		self.WorkedThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
 
 		# start time of current month
