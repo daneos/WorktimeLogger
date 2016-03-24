@@ -4,6 +4,8 @@ import sys
 import time
 import pynotify
 import sqlite3
+from datetime import datetime, timedelta
+from calendar import monthrange
 from math import floor
 from PyQt4 import uic, QtGui, QtCore
 
@@ -13,6 +15,9 @@ def sec_to_hm(secs):
 	h = floor(secs / 3600)
 	m = floor((secs - h*3600) / 60)
 	return (h, m)
+
+def hm_to_sec(h, m):
+	return h*3600 + m*60
 
 
 class Database:
@@ -66,6 +71,9 @@ class Database:
 	def deactivateLog(self, log_id):
 		self.q("UPDATE logs SET active = 0 WHERE id = %d" % log_id)
 		self.commit()
+
+	def getLogsFrom(self, time_start, time_end):
+		return self.q("SELECT * FROM logs WHERE time_in >= %d AND time_out <= %d AND active = 0" % (time_start, time_end))
 
 
 class Log:
@@ -122,6 +130,17 @@ class Log:
 	def invalidate(self):
 		self.need_new_log = True
 
+	def getTimeBetween(self, time_start, time_end):
+		res = self.db.getLogsFrom(time_start, time_end)
+		total = 0
+		for row in res:
+			total += row["time_out"] - row["time_in"]
+		if self.isLoggedIn() and self.getTime() >= time_start and self.getTime() <= time_end:
+			total += time.time() - self.getTime()
+		return total
+
+
+
 
 class WLLoginDialog(QtGui.QDialog):
 
@@ -165,6 +184,10 @@ class WLMain(QtGui.QMainWindow):
 		self.trayicon.setContextMenu(self.traymenu)
 		self.trayicon.show()
 
+		self.timer = QtCore.QTimer()
+		self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.update)
+		self.timer.start(30000)		# 30s update time
+
 		# workaround for not working "activated" signal in QSystemTrayIcon
 		self.connect(self.traymenu, QtCore.SIGNAL("aboutToShow()"), self.updateMenu)
 		self.connect(self.traymenu.openPanelAction, QtCore.SIGNAL("triggered()"), self.show)
@@ -172,7 +195,6 @@ class WLMain(QtGui.QMainWindow):
 
 		self.connect(self.LogInButton, QtCore.SIGNAL("clicked()"), self.logIn)
 		self.connect(self.LogOutButton, QtCore.SIGNAL("clicked()"), self.logOut)
-
 		self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.exit)
 
 		self.log = Log()
@@ -180,6 +202,8 @@ class WLMain(QtGui.QMainWindow):
 			self.logInGUIAction()
 		else:
 			self.logInPrompt = WLLoginDialog(self)
+
+		self.update()
 
 	def logOut(self):
 		self.log.logOut()
@@ -217,6 +241,27 @@ class WLMain(QtGui.QMainWindow):
 	def exit(self):
 		self.log.close()
 		sys.exit(0)
+
+	def update(self):
+		d = datetime.today()
+
+		# start time of current week
+		wstart_d = (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+		wstart = time.mktime(wstart_d.timetuple())
+		print wstart
+		# end time of current week
+		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
+		print wend
+		wtime = self.log.getTimeBetween(wstart, wend)
+		print wtime
+		self.WorkedThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
+
+		# start time of current month
+		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
+		# end time of current month
+		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
+		mtime = self.log.getTimeBetween(mstart, mend)
+		self.WorkedThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
 
 
 if __name__ == "__main__":

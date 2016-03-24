@@ -209,7 +209,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="WorkeThisMothLabel">
+         <widget class="QLabel" name="WorkedThisMonthLabel">
           <property name="text">
            <string>XX:XX</string>
           </property>
