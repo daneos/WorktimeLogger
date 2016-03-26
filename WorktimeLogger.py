@@ -9,15 +9,25 @@ from calendar import monthrange
 from math import floor
 from PyQt4 import uic, QtGui, QtCore
 
-TIMEFMT = "%H:%M %Y-%m-%d"
-
 def sec_to_hm(secs):
 	h = floor(secs / 3600)
-	m = floor((secs - h*3600) / 60)
+	m = round((secs - h*3600) / 60)
 	return (h, m)
 
 def hm_to_sec(h, m):
-	return h*3600 + m*60
+	return int(round(float(h)*3600 + float(m)*60))
+
+
+class __Error(Exception):
+	def __init__(self, info):
+		self.info = info
+	def __str__(self):
+		return "%s: %s" % (self.__class__.__name__, self.info)
+
+class DatabaseInvalidError(__Error):
+	pass
+class OptionNotFoundError(__Error):
+	pass
 
 
 class Database:
@@ -51,7 +61,7 @@ class Database:
 		if not res:			# no active log
 			return self.createNewLog()
 		elif len(res) > 1:	# multiple active logs
-			pass
+			raise DatabaseInvalidError("Multiple logs are active. Your database may be corrupted.")
 		else:
 			return res[0]
 
@@ -75,18 +85,54 @@ class Database:
 	def getLogsFrom(self, time_start, time_end):
 		return self.q("SELECT * FROM logs WHERE time_in >= %d AND time_out <= %d AND active = 0" % (time_start, time_end))
 
+	def getConfig(self):
+		conf = self.q("SELECT * FROM config")
+		conf_dict = {}
+		for row in conf:
+			conf_dict[row["option"]] = row["value"]
+		return conf_dict
+
+	def getOption(self, option):
+		opt = self.q("SELECT * FROM config WHERE option = %s" % option)
+		if not opt:
+			raise OptionNotFoundError("No option '%s' in database." % option)
+			return
+		return opt[0]["value"]
+
+	def setOption(self, option, value):
+		self.q("UPDATE config SET value = %s WHERE option = %s" % (value, option))
+		self.commit()
+
+
+class Config:
+	def __init__(self):
+		self.db = GLOBAL_DB
+		self.config = None
+		self.updateDB()
+
+	def updateDB(self):
+		self.config = self.db.getConfig()
+
+	def getOption(self, option):
+		return self.config[option]
+
+	def setOption(self, option, value):
+		self.db.setOption(option, value)
+		self.updateDB()
+
 
 class Log:
 	def __init__(self):
 		pynotify.init("WorktimeLogger")
 		self.t = time.time()
 		self.logged_in = False
-		self.db = Database()
+		self.db = GLOBAL_DB
 		self.log = self.db.getActiveLog()
 		if self.log["time_in"]:
 			self.t = self.log["time_in"]
 			self.logged_in = True
 		self.need_new_log = False
+		self.config = GLOBAL_CONFIG
 
 	def updateTime(self):
 		self.t = time.time()
@@ -103,7 +149,7 @@ class Log:
 
 		self.logged_in = True
 		pynotify.Notification("Worktime Logger",
-			"Logged in at %s" % time.strftime(TIMEFMT, time.localtime(self.getTime()))
+			"Logged in at %s" % time.strftime(self.config.getOption("timefmt"), time.localtime(self.getTime()))
 		).show()
 
 	def logOut(self):
@@ -114,15 +160,12 @@ class Log:
 
 		self.logged_in = False
 		pynotify.Notification("Worktime Logger",
-			"Logged out at %s" % time.strftime(TIMEFMT, time.localtime(self.getTime()))
+			"Logged out at %s" % time.strftime(self.config.getOption("timefmt"), time.localtime(self.getTime()))
 		).show()
 		self.invalidate()
 
 	def isLoggedIn(self):
 		return self.logged_in
-
-	def close(self):
-		self.db.close()
 
 	def updateDB(self):
 		self.log = self.db.getLog(self.log["id"])
@@ -140,17 +183,15 @@ class Log:
 		return total
 
 
-
-
 class WLLoginDialog(QtGui.QDialog):
-
 	def __init__(self, main):
 		QtGui.QDialog.__init__(self)
 		uic.loadUi("ui/LogInDialog.ui", self)
 
 		self.main = main
+		self.config = GLOBAL_CONFIG
 
-		self.TextLabel.setText("Log in at %s?" % time.strftime(TIMEFMT))
+		self.TextLabel.setText("Log in at %s?" % time.strftime(self.config.getOption("timefmt")))
 
 		self.connect(self.YesButton, QtCore.SIGNAL("clicked()"), self.logIn)
 		self.connect(self.NoButton, QtCore.SIGNAL("clicked()"), self.hide)
@@ -168,7 +209,6 @@ class WLLoginDialog(QtGui.QDialog):
 
 
 class WLMain(QtGui.QMainWindow):
-
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi("ui/WorktimeLogger.ui", self)
@@ -202,6 +242,8 @@ class WLMain(QtGui.QMainWindow):
 			self.logInGUIAction()
 		else:
 			self.logInPrompt = WLLoginDialog(self)
+
+		self.config = GLOBAL_CONFIG
 
 		self.update()
 
@@ -239,11 +281,13 @@ class WLMain(QtGui.QMainWindow):
 		ev.ignore()
 
 	def exit(self):
-		self.log.close()
+		GLOBAL_DB.close()
 		sys.exit(0)
 
 	def update(self):
 		d = datetime.today()
+		mtarget = hm_to_sec(self.config.getOption("hours"), self.config.getOption("minutes"))	# time to work in a month
+		wtarget = mtarget/4						# time to work in a week
 
 		# start time of current week
 		wstart_d = (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -252,6 +296,7 @@ class WLMain(QtGui.QMainWindow):
 		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		wtime = self.log.getTimeBetween(wstart, wend)
 		self.WorkedThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
+		self.LeftThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
 
 		# start time of current month
 		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
@@ -259,12 +304,19 @@ class WLMain(QtGui.QMainWindow):
 		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		mtime = self.log.getTimeBetween(mstart, mend)
 		self.WorkedThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
+		self.LeftThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
 
 
 if __name__ == "__main__":
 	from signal import signal, SIGINT, SIG_DFL
 	signal(SIGINT, SIG_DFL)
 
-	Application = QtGui.QApplication(sys.argv)
+	if len(sys.argv) > 1:
+		GLOBAL_DB = Database(sys.argv[1])
+	else:
+		GLOBAL_DB = Database()
+	GLOBAL_CONFIG = Config()
+
+	Application = QtGui.QApplication([])
 	Main = WLMain(Application)
 	sys.exit(Application.exec_())
