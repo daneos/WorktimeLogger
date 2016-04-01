@@ -296,7 +296,10 @@ class WLMain(QtGui.QMainWindow):
 		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		wtime = self.log.getTimeBetween(wstart, wend)
 		self.WorkedThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
-		self.LeftThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
+		if wtime > wtarget:
+			self.LeftThisWeekLabel.setText("-%02d:%02d" % sec_to_hm(wtime - wtarget))
+		else:
+			self.LeftThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
 
 		# start time of current month
 		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
@@ -304,7 +307,10 @@ class WLMain(QtGui.QMainWindow):
 		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		mtime = self.log.getTimeBetween(mstart, mend)
 		self.WorkedThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
-		self.LeftThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
+		if mtime > mtarget:
+			self.LeftThisMonthLabel.setText("-%02d:%02d" % sec_to_hm(mtime - mtarget))
+		else:
+			self.LeftThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
 
 
 if __name__ == "__main__":
