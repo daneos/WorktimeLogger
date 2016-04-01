@@ -12,6 +12,9 @@ from PyQt4 import uic, QtGui, QtCore
 def sec_to_hm(secs):
 	h = floor(secs / 3600)
 	m = round((secs - h*3600) / 60)
+	if m == 60:
+		m = 0
+		h += 1
 	return (h, m)
 
 def hm_to_sec(h, m):
