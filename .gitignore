@@ -1,3 +1,4 @@
 *.pyc
 *_dirty*
 nohup.out
+wl.sh
