@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import time
 import pynotify
@@ -8,6 +9,9 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 from math import floor
 from PyQt4 import uic, QtGui, QtCore
+
+base_dir = os.path.dirname(os.path.realpath(__file__))
+month_name = ("--", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 def sec_to_hm(secs):
 	h = floor(secs / 3600)
@@ -19,6 +23,17 @@ def sec_to_hm(secs):
 
 def hm_to_sec(h, m):
 	return int(round(float(h)*3600 + float(m)*60))
+
+def ordinal(n):
+	n = n % 10;
+	if n == 1:
+		return "st"
+	elif n == 2:
+		return "nd"
+	elif n == 3:
+		return "rd"
+	else:
+		return "th"
 
 
 class __Error(Exception):
@@ -189,7 +204,7 @@ class Log:
 class WLLoginDialog(QtGui.QDialog):
 	def __init__(self, main):
 		QtGui.QDialog.__init__(self)
-		uic.loadUi("ui/LogInDialog.ui", self)
+		uic.loadUi("%s/ui/LogInDialog.ui" % base_dir, self)
 
 		self.main = main
 		self.config = GLOBAL_CONFIG
@@ -211,10 +226,43 @@ class WLLoginDialog(QtGui.QDialog):
 		self.hide()
 
 
+class WLArchivalDataBrowser(QtGui.QWidget):
+	def __init__(self):
+		QtGui.QWidget.__init__(self)
+		uic.loadUi("%s/ui/ArchivalData.ui" % base_dir, self)
+
+		self.config = GLOBAL_CONFIG
+		self.log = Log()
+
+		self.connect(self.Calendar, QtCore.SIGNAL("clicked(QDate)"), self.dateChanged)
+		self.connect(self.Calendar, QtCore.SIGNAL("currentPageChanged(int,int)"), self.pageChanged)
+
+		self.date = self.Calendar.selectedDate()
+
+		self.update()
+		self.show()
+
+	def dateChanged(self, date):
+		self.date = date
+		print "date changed: %s" % date
+		self.update()
+
+	def pageChanged(self, year, month):
+		self.date.setDate(year, month, self.date.day())
+		if not self.date.isValid():
+			self.date.setDate(year, month, 1)
+		print "page changed: %s" % self.date
+		self.update()
+
+	def update(self):
+		self.DayLabel.setText("%d%s %s" % (self.date.day(), ordinal(self.date.day()), month_name[self.date.month()]))
+		self.WeekLabel.setText("Week %02d of %d" % self.date.weekNumber())
+		self.MonthLabel.setText("%s %d" % (month_name[self.date.month()], self.date.year()))
+
 class WLMain(QtGui.QMainWindow):
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
-		uic.loadUi("ui/WorktimeLogger.ui", self)
+		uic.loadUi("%s/ui/WorktimeLogger.ui" % base_dir, self)
 
 		self.traymenu = QtGui.QMenu()
 		self.traymenu.timeAction = self.traymenu.addAction("Not logged in")
@@ -238,6 +286,8 @@ class WLMain(QtGui.QMainWindow):
 
 		self.connect(self.LogInButton, QtCore.SIGNAL("clicked()"), self.logIn)
 		self.connect(self.LogOutButton, QtCore.SIGNAL("clicked()"), self.logOut)
+
+		self.connect(self.ArchiveButton, QtCore.SIGNAL("clicked()"), self.openArchive)
 		self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.exit)
 
 		self.log = Log()
@@ -314,6 +364,9 @@ class WLMain(QtGui.QMainWindow):
 			self.LeftThisMonthLabel.setText("-%02d:%02d" % sec_to_hm(mtime - mtarget))
 		else:
 			self.LeftThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
+
+	def openArchive(self):
+		self.ArchiveBrowser = WLArchivalDataBrowser()
 
 
 if __name__ == "__main__":
