@@ -259,6 +259,46 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 		self.WeekLabel.setText("Week %02d of %d" % self.date.weekNumber())
 		self.MonthLabel.setText("%s %d" % (month_name[self.date.month()], self.date.year()))
 
+		d = datetime(self.date.year(), self.date.month(), self.date.day())
+		mtarget = hm_to_sec(self.config.getOption("hours"), self.config.getOption("minutes"))	# time to work in a month
+		wtarget = mtarget/4						# time to work in a week
+		dtarget = wtarget/5						# time to work in a day
+
+		# start time of selected day
+		dstart = time.mktime(d.replace(hour=0, minute=0, second=0, microsecond=0).timetuple())
+		# end time of selected month
+		dend = time.mktime(d.replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
+		dtime = self.log.getTimeBetween(dstart, dend)
+		self.WorkedDayLabel.setText("%02d:%02d" % sec_to_hm(dtime))
+		if dtime > dtarget:
+			self.LeftDayLabel.setText("-%02d:%02d" % sec_to_hm(dtime - dtarget))
+		else:
+			self.LeftDayLabel.setText("%02d:%02d" % sec_to_hm(dtarget - dtime))
+
+		# start time of selected week
+		wstart_d = (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+		wstart = time.mktime(wstart_d.timetuple())
+		# end time of selected week
+		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
+		wtime = self.log.getTimeBetween(wstart, wend)
+		self.WorkedWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
+		if wtime > wtarget:
+			self.LeftWeekLabel.setText("-%02d:%02d" % sec_to_hm(wtime - wtarget))
+		else:
+			self.LeftWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
+
+		# start time of selected month
+		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
+		# end time of selected month
+		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
+		mtime = self.log.getTimeBetween(mstart, mend)
+		self.WorkedMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
+		if mtime > mtarget:
+			self.LeftMonthLabel.setText("-%02d:%02d" % sec_to_hm(mtime - mtarget))
+		else:
+			self.LeftMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
+
+
 class WLMain(QtGui.QMainWindow):
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
