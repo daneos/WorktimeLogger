@@ -25,12 +25,12 @@ def hm_to_sec(h, m):
 	return int(round(float(h)*3600 + float(m)*60))
 
 def ordinal(n):
-	n = n % 10;
-	if n == 1:
+	m = n % 10;
+	if m == 1 and n != 11:
 		return "st"
-	elif n == 2:
+	elif m == 2 and n != 12:
 		return "nd"
-	elif n == 3:
+	elif m == 3 and n != 13:
 		return "rd"
 	else:
 		return "th"
