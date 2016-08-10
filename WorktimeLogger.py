@@ -111,14 +111,22 @@ class Database:
 		return conf_dict
 
 	def getOption(self, option):
-		opt = self.q("SELECT * FROM config WHERE option = %s" % option)
+		opt = self.q("SELECT * FROM config WHERE option = \"%s\"" % option)
 		if not opt:
 			raise OptionNotFoundError("No option '%s' in database." % option)
 			return
 		return opt[0]["value"]
 
 	def setOption(self, option, value):
-		self.q("UPDATE config SET value = %s WHERE option = %s" % (value, option))
+		self.q("UPDATE config SET value = \"%s\" WHERE option = \"%s\"" % (value, option))
+		self.commit()
+
+	def addOption(self, option, value):
+		self.q("INSERT INTO config (option, value) VALUES (\"%s\", \"%s\")" % (option, value))
+		self.commit()
+
+	def removeOption(self, option):
+		self.q("DELETE FROM config WHERE option = \"%s\"" % option)
 		self.commit()
 
 
@@ -135,8 +143,18 @@ class Config:
 		return self.config[option]
 
 	def setOption(self, option, value):
-		self.db.setOption(option, value)
+		if option not in self.config:
+			self.db.addOption(option, value)
+		else:
+			self.db.setOption(option, value)
 		self.updateDB()
+
+	def removeOption(self, option):
+		self.db.removeOption(option)
+		self.updateDB()
+
+	def getAll(self):
+		return self.config
 
 
 class Log:
@@ -299,6 +317,58 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 			self.LeftMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
 
 
+class WLConfigBrowser(QtGui.QWidget):
+	def __init__(self, parent):
+		QtGui.QWidget.__init__(self)
+		uic.loadUi("%s/ui/ConfEditor.ui" % base_dir, self)
+		self.config = GLOBAL_CONFIG
+		self.parent = parent
+
+		self.connect(self.AddButton, QtCore.SIGNAL("clicked()"), self.addOption)
+		self.connect(self.RemoveButton, QtCore.SIGNAL("clicked()"), self.removeOption)
+		self.connect(self.ApplyButton, QtCore.SIGNAL("clicked()"), self.apply)
+		self.connect(self.CancelButton, QtCore.SIGNAL("clicked()"), self.hide)
+		# self.connect(self.UnlockCheckbox, QtCore.SIGNAL("stateChanged(int)"), self.allowClear)
+		self.connect(self.ClearButton, QtCore.SIGNAL("clicked()"), self.clearLog)
+
+		self.update()
+		self.show()
+
+	def update(self):
+		opts = self.config.getAll()
+		self.OptionsTable.setRowCount(0)
+		row = 0
+		for k,v in opts.iteritems():
+			self.OptionsTable.setRowCount(row+1)
+			self.OptionsTable.setItem(row, 0, QtGui.QTableWidgetItem(k))
+			self.OptionsTable.setItem(row, 1, QtGui.QTableWidgetItem(v))
+			row += 1
+
+	def addOption(self):
+		self.OptionsTable.setRowCount(self.OptionsTable.rowCount()+1)
+
+	def removeOption(self):
+		self.OptionsTable.removeRow(self.OptionsTable.currentRow())
+
+	def apply(self):
+		present_options = []
+		for row in range(0, self.OptionsTable.rowCount()):
+			k = str(self.OptionsTable.item(row, 0).text())
+			v = str(self.OptionsTable.item(row, 1).text())
+			self.config.setOption(k, v)
+			present_options.append(k)
+		for opt in [ k for k in self.config.getAll() if k not in present_options ]:
+			self.config.removeOption(opt)
+		self.parent.update()
+		self.hide()
+
+	def allowClear(self):
+		self.ClearButton.setEnabled(True)
+
+	def clearLog(self):
+		pass
+
+
 class WLMain(QtGui.QMainWindow):
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
@@ -328,6 +398,7 @@ class WLMain(QtGui.QMainWindow):
 		self.connect(self.LogOutButton, QtCore.SIGNAL("clicked()"), self.logOut)
 
 		self.connect(self.ArchiveButton, QtCore.SIGNAL("clicked()"), self.openArchive)
+		self.connect(self.ConfigureButton, QtCore.SIGNAL("clicked()"), self.openConfig)
 		self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.exit)
 
 		self.log = Log()
@@ -407,6 +478,9 @@ class WLMain(QtGui.QMainWindow):
 
 	def openArchive(self):
 		self.ArchiveBrowser = WLArchivalDataBrowser()
+
+	def openConfig(self):
+		self.ConfigBrowser = WLConfigBrowser(self)
 
 
 if __name__ == "__main__":

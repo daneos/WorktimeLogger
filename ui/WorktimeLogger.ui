@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
+    <width>336</width>
     <height>255</height>
    </rect>
   </property>
@@ -29,6 +29,9 @@
         <property name="text">
          <string>Log in</string>
         </property>
+        <property name="icon">
+         <iconset theme="appointment"/>
+        </property>
        </widget>
       </item>
       <item>
@@ -38,6 +41,9 @@
         </property>
         <property name="text">
          <string>Log out</string>
+        </property>
+        <property name="icon">
+         <iconset theme="go-previous"/>
         </property>
        </widget>
       </item>
@@ -310,6 +316,9 @@
         <property name="text">
          <string>Archival data</string>
         </property>
+        <property name="icon">
+         <iconset theme="x-office-calendar"/>
+        </property>
        </widget>
       </item>
       <item>
@@ -317,12 +326,18 @@
         <property name="text">
          <string>Configure</string>
         </property>
+        <property name="icon">
+         <iconset theme="preferences-system"/>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="QuitButton">
         <property name="text">
          <string>Quit</string>
+        </property>
+        <property name="icon">
+         <iconset theme="exit"/>
         </property>
        </widget>
       </item>
