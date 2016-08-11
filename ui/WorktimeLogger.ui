@@ -30,7 +30,9 @@
          <string>Log in</string>
         </property>
         <property name="icon">
-         <iconset theme="appointment"/>
+         <iconset theme="appointment">
+          <normaloff/>
+         </iconset>
         </property>
        </widget>
       </item>
@@ -43,7 +45,9 @@
          <string>Log out</string>
         </property>
         <property name="icon">
-         <iconset theme="go-previous"/>
+         <iconset theme="go-previous">
+          <normaloff/>
+         </iconset>
         </property>
        </widget>
       </item>
@@ -62,6 +66,13 @@
        <widget class="QLabel" name="LastLogOutLabel">
         <property name="text">
          <string>Last log out: [TIME] [DATE]</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalTimeLabel">
+        <property name="text">
+         <string>Total time: XXh XXmin</string>
         </property>
        </widget>
       </item>
@@ -317,7 +328,9 @@
          <string>Archival data</string>
         </property>
         <property name="icon">
-         <iconset theme="x-office-calendar"/>
+         <iconset theme="x-office-calendar">
+          <normaloff/>
+         </iconset>
         </property>
        </widget>
       </item>
@@ -327,7 +340,9 @@
          <string>Configure</string>
         </property>
         <property name="icon">
-         <iconset theme="preferences-system"/>
+         <iconset theme="preferences-system">
+          <normaloff/>
+         </iconset>
         </property>
        </widget>
       </item>
@@ -337,7 +352,9 @@
          <string>Quit</string>
         </property>
         <property name="icon">
-         <iconset theme="exit"/>
+         <iconset theme="exit">
+          <normaloff/>
+         </iconset>
         </property>
        </widget>
       </item>

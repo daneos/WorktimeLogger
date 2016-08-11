@@ -107,6 +107,9 @@ class Database:
 		self.q("DELETE FROM logs")
 		self.commit()
 
+	def getAllLogs(self):
+		return self.q("SELECT * FROM logs WHERE active = 0")
+
 	def getConfig(self):
 		conf = self.q("SELECT * FROM config")
 		conf_dict = {}
@@ -189,7 +192,7 @@ class Log:
 
 		self.logged_in = True
 		pynotify.Notification("Worktime Logger",
-			"Logged in at %s" % time.strftime(self.config.getOption("timefmt"), time.localtime(self.getTime()))
+			"Logged in at %s" % time.strftime(self.config.getOption("datetime_fmt"), time.localtime(self.getTime()))
 		).show()
 
 	def logOut(self):
@@ -200,7 +203,7 @@ class Log:
 
 		self.logged_in = False
 		pynotify.Notification("Worktime Logger",
-			"Logged out at %s" % time.strftime(self.config.getOption("timefmt"), time.localtime(self.getTime()))
+			"Logged out at %s" % time.strftime(self.config.getOption("datetime_fmt"), time.localtime(self.getTime()))
 		).show()
 		self.invalidate()
 
@@ -222,6 +225,15 @@ class Log:
 			total += time.time() - self.getTime()
 		return total
 
+	def getTotalTime(self):
+		res = self.db.getAllLogs()
+		total = 0
+		for row in res:
+			total += row["time_out"] - row["time_in"]
+		if self.isLoggedIn():
+			total += time.time() - self.getTime()
+		return total
+
 
 class WLLoginDialog(QtGui.QDialog):
 	def __init__(self, main):
@@ -231,7 +243,7 @@ class WLLoginDialog(QtGui.QDialog):
 		self.main = main
 		self.config = GLOBAL_CONFIG
 
-		self.TextLabel.setText("Log in at %s?" % time.strftime(self.config.getOption("timefmt")))
+		self.TextLabel.setText("Log in at %s?" % time.strftime(self.config.getOption("datetime_fmt")))
 
 		self.connect(self.YesButton, QtCore.SIGNAL("clicked()"), self.logIn)
 		self.connect(self.NoButton, QtCore.SIGNAL("clicked()"), self.hide)
@@ -279,6 +291,8 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 		self.WeekLabel.setText("Week %02d of %d" % self.date.weekNumber())
 		self.MonthLabel.setText("%s %d" % (month_name[self.date.month()], self.date.year()))
 
+		timefmt = self.config.getOption("timeshort_fmt")
+
 		d = datetime(self.date.year(), self.date.month(), self.date.day())
 		mtarget = hm_to_sec(self.config.getOption("hours"), self.config.getOption("minutes"))	# time to work in a month
 		wtarget = mtarget/4						# time to work in a week
@@ -289,11 +303,11 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 		# end time of selected month
 		dend = time.mktime(d.replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		dtime = self.log.getTimeBetween(dstart, dend)
-		self.WorkedDayLabel.setText("%02d:%02d" % sec_to_hm(dtime))
+		self.WorkedDayLabel.setText(timefmt % sec_to_hm(dtime))
 		if dtime > dtarget:
-			self.LeftDayLabel.setText("-%02d:%02d" % sec_to_hm(dtime - dtarget))
+			self.LeftDayLabel.setText("-"+timefmt % sec_to_hm(dtime - dtarget))
 		else:
-			self.LeftDayLabel.setText("%02d:%02d" % sec_to_hm(dtarget - dtime))
+			self.LeftDayLabel.setText(timefmt % sec_to_hm(dtarget - dtime))
 
 		# start time of selected week
 		wstart_d = (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -301,22 +315,22 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 		# end time of selected week
 		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		wtime = self.log.getTimeBetween(wstart, wend)
-		self.WorkedWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
+		self.WorkedWeekLabel.setText(timefmt % sec_to_hm(wtime))
 		if wtime > wtarget:
-			self.LeftWeekLabel.setText("-%02d:%02d" % sec_to_hm(wtime - wtarget))
+			self.LeftWeekLabel.setText("-"+timefmt % sec_to_hm(wtime - wtarget))
 		else:
-			self.LeftWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
+			self.LeftWeekLabel.setText(timefmt % sec_to_hm(wtarget - wtime))
 
 		# start time of selected month
 		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
 		# end time of selected month
 		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		mtime = self.log.getTimeBetween(mstart, mend)
-		self.WorkedMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
+		self.WorkedMonthLabel.setText(timefmt % sec_to_hm(mtime))
 		if mtime > mtarget:
 			self.LeftMonthLabel.setText("-%02d:%02d" % sec_to_hm(mtime - mtarget))
 		else:
-			self.LeftMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
+			self.LeftMonthLabel.setText(timefmt % sec_to_hm(mtarget - mtime))
 
 
 class WLClearLogDialog(QtGui.QWidget):
@@ -456,8 +470,9 @@ class WLMain(QtGui.QMainWindow):
 
 	def updateMenu(self):
 		if self.log.isLoggedIn():
+			timefmt = self.config.getOption("timelong_fmt")
 			diff = time.time() - self.log.getTime()
-			self.traymenu.timeAction.setText("Logged in since %02dh %02dmin" % sec_to_hm(diff))
+			self.traymenu.timeAction.setText("Logged in since "+timefmt % sec_to_hm(diff))
 
 	def closeEvent(self, ev):
 		self.hide()
@@ -469,6 +484,9 @@ class WLMain(QtGui.QMainWindow):
 
 	def update(self):
 		d = datetime.today()
+		timefmt = self.config.getOption("timeshort_fmt")
+		longtimefmt = self.config.getOption("timelong_fmt")
+
 		mtarget = hm_to_sec(self.config.getOption("hours"), self.config.getOption("minutes"))	# time to work in a month
 		wtarget = mtarget/4						# time to work in a week
 
@@ -478,22 +496,24 @@ class WLMain(QtGui.QMainWindow):
 		# end time of current week
 		wend = time.mktime((wstart_d + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		wtime = self.log.getTimeBetween(wstart, wend)
-		self.WorkedThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtime))
+		self.WorkedThisWeekLabel.setText(timefmt % sec_to_hm(wtime))
 		if wtime > wtarget:
-			self.LeftThisWeekLabel.setText("-%02d:%02d" % sec_to_hm(wtime - wtarget))
+			self.LeftThisWeekLabel.setText("-"+timefmt % sec_to_hm(wtime - wtarget))
 		else:
-			self.LeftThisWeekLabel.setText("%02d:%02d" % sec_to_hm(wtarget - wtime))
+			self.LeftThisWeekLabel.setText(timefmt % sec_to_hm(wtarget - wtime))
 
 		# start time of current month
 		mstart = time.mktime(d.replace(day=1, hour=0, minute=0, second=0, microsecond=0).timetuple())
 		# end time of current month
 		mend = time.mktime(d.replace(day=monthrange(d.year, d.month)[1], hour=23, minute=59, second=59, microsecond=999999).timetuple())
 		mtime = self.log.getTimeBetween(mstart, mend)
-		self.WorkedThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtime))
+		self.WorkedThisMonthLabel.setText(timefmt % sec_to_hm(mtime))
 		if mtime > mtarget:
-			self.LeftThisMonthLabel.setText("-%02d:%02d" % sec_to_hm(mtime - mtarget))
+			self.LeftThisMonthLabel.setText("-"+timefmt % sec_to_hm(mtime - mtarget))
 		else:
-			self.LeftThisMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
+			self.LeftThisMonthLabel.setText(timefmt % sec_to_hm(mtarget - mtime))
+
+		self.TotalTimeLabel.setText("Total time: "+longtimefmt % sec_to_hm(self.log.getTotalTime()))
 
 	def openArchive(self):
 		self.ArchiveBrowser = WLArchivalDataBrowser()
