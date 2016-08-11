@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>336</width>
-    <height>255</height>
+    <height>258</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,26 +55,98 @@
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
-       <widget class="QLabel" name="LastLogInLabel">
-        <property name="text">
-         <string>Last log in: [TIME] [DATE]</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,5">
+        <property name="spacing">
+         <number>6</number>
         </property>
-       </widget>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last log in:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="LastLogInLabel">
+          <property name="text">
+           <string>[TIME] [DATE]</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QLabel" name="LastLogOutLabel">
-        <property name="text">
-         <string>Last log out: [TIME] [DATE]</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,5">
+        <property name="spacing">
+         <number>6</number>
         </property>
-       </widget>
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last log out:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="LastLogOutLabel">
+          <property name="text">
+           <string>[TIME] [DATE]</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QLabel" name="TotalTimeLabel">
-        <property name="text">
-         <string>Total time: XXh XXmin</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,5">
+        <property name="spacing">
+         <number>6</number>
         </property>
-       </widget>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Total time:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="TotalTimeLabel">
+          <property name="text">
+           <string>XXh XXmin</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>

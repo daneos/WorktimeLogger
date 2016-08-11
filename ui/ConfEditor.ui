@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Configuration</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../icons/wl.png</normaloff>../icons/wl.png</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTableWidget" name="OptionsTable">

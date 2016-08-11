@@ -110,6 +110,12 @@ class Database:
 	def getAllLogs(self):
 		return self.q("SELECT * FROM logs WHERE active = 0")
 
+	def getLastInTime(self):
+		return self.q("SELECT time_in FROM logs ORDER BY time_in DESC LIMIT 1")[0]
+
+	def getLastOutTime(self):
+		return self.q("SELECT time_out FROM logs ORDER BY time_out DESC LIMIT 1")[0]
+
 	def getConfig(self):
 		conf = self.q("SELECT * FROM config")
 		conf_dict = {}
@@ -233,6 +239,12 @@ class Log:
 		if self.isLoggedIn():
 			total += time.time() - self.getTime()
 		return total
+
+	def getLastInTime(self):
+		return self.db.getLastInTime()["time_in"]
+
+	def getLastOutTime(self):
+		return self.db.getLastOutTime()["time_out"]
 
 
 class WLLoginDialog(QtGui.QDialog):
@@ -414,7 +426,7 @@ class WLMain(QtGui.QMainWindow):
 		self.traymenu.openPanelAction = self.traymenu.addAction("Open panel")
 		self.traymenu.logAction = self.traymenu.addAction("Log in")
 
-		self.trayicon = QtGui.QSystemTrayIcon(QtGui.QIcon("icons/wl.png"), app)
+		self.trayicon = QtGui.QSystemTrayIcon(QtGui.QIcon("%s/icons/wl.png" % base_dir), app)
 		self.trayicon.setContextMenu(self.traymenu)
 		self.trayicon.show()
 
@@ -485,7 +497,6 @@ class WLMain(QtGui.QMainWindow):
 	def update(self):
 		d = datetime.today()
 		timefmt = self.config.getOption("timeshort_fmt")
-		longtimefmt = self.config.getOption("timelong_fmt")
 
 		mtarget = hm_to_sec(self.config.getOption("hours"), self.config.getOption("minutes"))	# time to work in a month
 		wtarget = mtarget/4						# time to work in a week
@@ -513,7 +524,11 @@ class WLMain(QtGui.QMainWindow):
 		else:
 			self.LeftThisMonthLabel.setText(timefmt % sec_to_hm(mtarget - mtime))
 
-		self.TotalTimeLabel.setText("Total time: "+longtimefmt % sec_to_hm(self.log.getTotalTime()))
+		datefmt = self.config.getOption("datetime_fmt")
+		longtimefmt = self.config.getOption("timelong_fmt")
+		self.LastLogInLabel.setText(time.strftime(datefmt, time.localtime(self.log.getLastInTime())))
+		self.LastLogOutLabel.setText(time.strftime(datefmt, time.localtime(self.log.getLastOutTime())))
+		self.TotalTimeLabel.setText(longtimefmt % sec_to_hm(self.log.getTotalTime()))
 
 	def openArchive(self):
 		self.ArchiveBrowser = WLArchivalDataBrowser()
