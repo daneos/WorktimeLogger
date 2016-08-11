@@ -103,6 +103,10 @@ class Database:
 	def getLogsFrom(self, time_start, time_end):
 		return self.q("SELECT * FROM logs WHERE time_in >= %d AND time_out <= %d AND active = 0" % (time_start, time_end))
 
+	def clearLogs(self):
+		self.q("DELETE FROM logs")
+		self.commit()
+
 	def getConfig(self):
 		conf = self.q("SELECT * FROM config")
 		conf_dict = {}
@@ -262,14 +266,12 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 
 	def dateChanged(self, date):
 		self.date = date
-		print "date changed: %s" % date
 		self.update()
 
 	def pageChanged(self, year, month):
 		self.date.setDate(year, month, self.date.day())
 		if not self.date.isValid():
 			self.date.setDate(year, month, 1)
-		print "page changed: %s" % self.date
 		self.update()
 
 	def update(self):
@@ -317,6 +319,27 @@ class WLArchivalDataBrowser(QtGui.QWidget):
 			self.LeftMonthLabel.setText("%02d:%02d" % sec_to_hm(mtarget - mtime))
 
 
+class WLClearLogDialog(QtGui.QWidget):
+	def __init__(self, parent, main):
+		QtGui.QWidget.__init__(self)
+		uic.loadUi("%s/ui/ClearLogDialog.ui" % base_dir, self)
+		self.parent = parent
+		self.main = main
+
+		self.connect(self.ClearButton, QtCore.SIGNAL("clicked()"), self.clearLog)
+		self.connect(self.CancelButton, QtCore.SIGNAL("clicked()"), self.hide)
+
+		self.update()
+		self.show()
+
+	def clearLog(self):
+		self.main.logOut()
+		GLOBAL_DB.clearLogs()
+		self.main.update()
+		self.hide()
+		self.parent.hide()
+
+
 class WLConfigBrowser(QtGui.QWidget):
 	def __init__(self, parent):
 		QtGui.QWidget.__init__(self)
@@ -328,7 +351,6 @@ class WLConfigBrowser(QtGui.QWidget):
 		self.connect(self.RemoveButton, QtCore.SIGNAL("clicked()"), self.removeOption)
 		self.connect(self.ApplyButton, QtCore.SIGNAL("clicked()"), self.apply)
 		self.connect(self.CancelButton, QtCore.SIGNAL("clicked()"), self.hide)
-		# self.connect(self.UnlockCheckbox, QtCore.SIGNAL("stateChanged(int)"), self.allowClear)
 		self.connect(self.ClearButton, QtCore.SIGNAL("clicked()"), self.clearLog)
 
 		self.update()
@@ -362,11 +384,8 @@ class WLConfigBrowser(QtGui.QWidget):
 		self.parent.update()
 		self.hide()
 
-	def allowClear(self):
-		self.ClearButton.setEnabled(True)
-
 	def clearLog(self):
-		pass
+		self.ClearDialog = WLClearLogDialog(self, self.parent)
 
 
 class WLMain(QtGui.QMainWindow):

@@ -50,38 +50,72 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>0</number>
+      <widget class="QPushButton" name="AddButton">
+       <property name="text">
+        <string>Add</string>
        </property>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Clearing the log will remove all logged time.
-There is no going back from that.</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::AutoText</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="UnlockCheckbox">
-         <property name="text">
-          <string>CheckBox</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+       <property name="icon">
+        <iconset theme="list-add">
+         <normaloff/>
+        </iconset>
+       </property>
+      </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="RemoveButton">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+       <property name="icon">
+        <iconset theme="list-remove">
+         <normaloff/>
+        </iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="ApplyButton">
+       <property name="text">
+        <string>Apply</string>
+       </property>
+       <property name="icon">
+        <iconset theme="ok">
+         <normaloff/>
+        </iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="CancelButton">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+       <property name="icon">
+        <iconset theme="process-stop">
+         <normaloff/>
+        </iconset>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QFrame" name="DangerZoneFrame">
        <property name="styleSheet">
@@ -106,7 +140,7 @@ There is no going back from that.</string>
         <item>
          <widget class="QPushButton" name="ClearButton">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -118,39 +152,17 @@ There is no going back from that.</string>
            <string>Clear log</string>
           </property>
           <property name="icon">
-           <iconset theme="edit-delete"/>
+           <iconset theme="edit-delete">
+            <normaloff/>
+           </iconset>
           </property>
          </widget>
         </item>
        </layout>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="AddButton">
-       <property name="text">
-        <string>Add</string>
-       </property>
-       <property name="icon">
-        <iconset theme="list-add"/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="RemoveButton">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-       <property name="icon">
-        <iconset theme="list-remove"/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
+      <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -161,26 +173,6 @@ There is no going back from that.</string>
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="ApplyButton">
-       <property name="text">
-        <string>Apply</string>
-       </property>
-       <property name="icon">
-        <iconset theme="ok"/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="CancelButton">
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-       <property name="icon">
-        <iconset theme="process-stop"/>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
