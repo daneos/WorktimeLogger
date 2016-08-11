@@ -2,3 +2,7 @@
 *_dirty*
 nohup.out
 wl.sh
+
+*.egg-info/*
+build/*
+dist/*

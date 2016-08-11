@@ -12,6 +12,8 @@ from PyQt4 import uic, QtGui, QtCore
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 month_name = ("--", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+GLOBAL_DB = None
+GLOBAL_CONFIG = None
 
 def sec_to_hm(secs):
 	h = floor(secs / 3600)
@@ -49,7 +51,13 @@ class OptionNotFoundError(__Error):
 
 
 class Database:
-	def __init__(self, filename="wl.sqlite"):
+	def __init__(self, filename="~/.WorktimeLogger/wl.sqlite"):
+		filename = os.path.realpath(os.path.expanduser(filename))
+		if not os.path.exists(filename):
+			db_dir = os.path.dirname(filename)
+			if not os.path.exists(db_dir):
+				os.system("mkdir -p %s" % db_dir)
+			os.system("cp %s/wl.sqlite %s" % (base_dir, filename))
 		self.db = sqlite3.connect(filename)
 		self.cur = self.db.cursor()
 
@@ -537,9 +545,11 @@ class WLMain(QtGui.QMainWindow):
 		self.ConfigBrowser = WLConfigBrowser(self)
 
 
-if __name__ == "__main__":
+def main():
 	from signal import signal, SIGINT, SIG_DFL
 	signal(SIGINT, SIG_DFL)
+
+	global GLOBAL_DB, GLOBAL_CONFIG
 
 	if len(sys.argv) > 1:
 		GLOBAL_DB = Database(sys.argv[1])
