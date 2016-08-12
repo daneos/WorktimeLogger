@@ -1,5 +1,8 @@
 #!/usr/bin/env python2.7
 
+import os
+os.system(""" cat WorktimeLogger.py | sed -e "s/WL_VERSION=\".*\"/WL_VERSION='`git describe --tags --always`'/" > WorktimeLogger.py """)
+
 try:
 	from setuptools import setup
 except ImportError:
