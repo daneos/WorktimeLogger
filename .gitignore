@@ -1,0 +1,8 @@
+*.pyc
+*_dirty*
+nohup.out
+wl.sh
+
+*.egg-info/*
+build/*
+dist/*

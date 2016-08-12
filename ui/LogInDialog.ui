@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>313</width>
+    <height>77</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Worktime Logger</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../icons/wl.png</normaloff>../icons/wl.png</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="TextLabel">
+     <property name="text">
+      <string>Log in at [TIME] [DATE] ?</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="YesButton">
+       <property name="text">
+        <string>Yes</string>
+       </property>
+       <property name="icon">
+        <iconset theme="ok"/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="NoButton">
+       <property name="text">
+        <string>No</string>
+       </property>
+       <property name="icon">
+        <iconset theme="process-stop"/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="PanelButton">
+       <property name="text">
+        <string>Open panel</string>
+       </property>
+       <property name="icon">
+        <iconset theme="emblem-system"/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
