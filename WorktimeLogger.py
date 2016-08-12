@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+WL_VERSION='c19fa4d'
+
 import os
 import sys
 import time
@@ -426,6 +428,7 @@ class WLMain(QtGui.QMainWindow):
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi("%s/ui/WorktimeLogger.ui" % base_dir, self)
+		self.VersionLabel.setText(WL_VERSION)
 
 		self.traymenu = QtGui.QMenu()
 		self.traymenu.timeAction = self.traymenu.addAction("Not logged in")
